@@ -1,12 +1,12 @@
-package v1
+package v1alpha1
 import(
    meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const(
-    CRDPlural      string = "people"
-	CRDGroup       string = "aslangroup.io"
-	CRDVersion     string = "v1"
+    CRDPlural      string = "cassandraclusters"
+	CRDGroup       string = "cassandra.database.com"
+	CRDVersion     string = "v1alpha1"
 	FullCRDName    string = CRDPlural + "." + CRDGroup
 )
 
@@ -14,27 +14,27 @@ const(
 // +genclient:noStatus
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Person struct{
+type CassandraCluster struct{
    meta_v1.TypeMeta `json:",inline"`
    meta_v1.ObjectMeta `json:"metadata"`
-   Spec PersonSpec `json:"spec"`
-   Status PersonStatus `json:"status, omitempty"`
+   Spec CassandraClusterSpec `json:"spec"`
+   Status CassandraClusterStatus `json:"status, omitempty"`
 }
 
-type PersonSpec struct{
-    Age string `json:"age"`
-    Gender string `json:"gender"`
+type CassandraClusterSpec struct{
+    Size string `json:"size"`
+    Version string `json:"version"`
 }
 
-type PersonStatus struct {
+type CassandraClusterStatus struct {
     State string `json:"state,omitempty"`
     Message string `json:"message omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type PersonList struct{
+type CassandraClusterList struct{
     meta_v1.TypeMeta `json:",inline"`
     meta_v1.ListMeta `json:"metadata"`
-    Items []Person `json:"items"`
+    Items []CassandraCluster `json:"items"`
 }

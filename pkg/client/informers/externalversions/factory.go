@@ -23,9 +23,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/aslanbekirov/personcrd/pkg/client/clientset/versioned"
-	aslangroup_io "github.com/aslanbekirov/personcrd/pkg/client/informers/externalversions/aslangroup.io"
-	internalinterfaces "github.com/aslanbekirov/personcrd/pkg/client/informers/externalversions/internalinterfaces"
+	versioned "github.com/aslanbekirov/cassandra-operator/pkg/client/clientset/versioned"
+	cassandra_database_com "github.com/aslanbekirov/cassandra-operator/pkg/client/informers/externalversions/cassandra.database.com"
+	internalinterfaces "github.com/aslanbekirov/cassandra-operator/pkg/client/informers/externalversions/internalinterfaces"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -123,9 +123,9 @@ type SharedInformerFactory interface {
 	ForResource(resource schema.GroupVersionResource) (GenericInformer, error)
 	WaitForCacheSync(stopCh <-chan struct{}) map[reflect.Type]bool
 
-	Aslangroup() aslangroup_io.Interface
+	Cassandra() cassandra_database_com.Interface
 }
 
-func (f *sharedInformerFactory) Aslangroup() aslangroup_io.Interface {
-	return aslangroup_io.New(f, f.namespace, f.tweakListOptions)
+func (f *sharedInformerFactory) Cassandra() cassandra_database_com.Interface {
+	return cassandra_database_com.New(f, f.namespace, f.tweakListOptions)
 }

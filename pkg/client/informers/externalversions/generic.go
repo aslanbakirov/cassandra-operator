@@ -21,7 +21,7 @@ package externalversions
 import (
 	"fmt"
 
-	v1 "github.com/aslanbekirov/personcrd/pkg/apis/aslangroup.io/v1"
+	v1alpha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	cache "k8s.io/client-go/tools/cache"
 )
@@ -52,9 +52,9 @@ func (f *genericInformer) Lister() cache.GenericLister {
 // TODO extend this to unknown resources with a client pool
 func (f *sharedInformerFactory) ForResource(resource schema.GroupVersionResource) (GenericInformer, error) {
 	switch resource {
-	// Group=aslangroup.io, Version=v1
-	case v1.SchemeGroupVersion.WithResource("persons"):
-		return &genericInformer{resource: resource.GroupResource(), informer: f.Aslangroup().V1().Persons().Informer()}, nil
+	// Group=cassandra.database.com, Version=v1alpha1
+	case v1alpha1.SchemeGroupVersion.WithResource("cassandraclusters"):
+		return &genericInformer{resource: resource.GroupResource(), informer: f.Cassandra().V1alpha1().CassandraClusters().Informer()}, nil
 
 	}
 

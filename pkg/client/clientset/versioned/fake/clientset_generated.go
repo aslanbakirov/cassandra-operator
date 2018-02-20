@@ -17,9 +17,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/aslanbekirov/personcrd/pkg/client/clientset/versioned"
-	aslangroupv1 "github.com/aslanbekirov/personcrd/pkg/client/clientset/versioned/typed/aslangroup.io/v1"
-	fakeaslangroupv1 "github.com/aslanbekirov/personcrd/pkg/client/clientset/versioned/typed/aslangroup.io/v1/fake"
+	clientset "github.com/aslanbekirov/cassandra-operator/pkg/client/clientset/versioned"
+	cassandrav1alpha1 "github.com/aslanbekirov/cassandra-operator/pkg/client/clientset/versioned/typed/cassandra.database.com/v1alpha1"
+	fakecassandrav1alpha1 "github.com/aslanbekirov/cassandra-operator/pkg/client/clientset/versioned/typed/cassandra.database.com/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"
@@ -68,12 +68,12 @@ func (c *Clientset) Discovery() discovery.DiscoveryInterface {
 
 var _ clientset.Interface = &Clientset{}
 
-// AslangroupV1 retrieves the AslangroupV1Client
-func (c *Clientset) AslangroupV1() aslangroupv1.AslangroupV1Interface {
-	return &fakeaslangroupv1.FakeAslangroupV1{Fake: &c.Fake}
+// CassandraV1alpha1 retrieves the CassandraV1alpha1Client
+func (c *Clientset) CassandraV1alpha1() cassandrav1alpha1.CassandraV1alpha1Interface {
+	return &fakecassandrav1alpha1.FakeCassandraV1alpha1{Fake: &c.Fake}
 }
 
-// Aslangroup retrieves the AslangroupV1Client
-func (c *Clientset) Aslangroup() aslangroupv1.AslangroupV1Interface {
-	return &fakeaslangroupv1.FakeAslangroupV1{Fake: &c.Fake}
+// Cassandra retrieves the CassandraV1alpha1Client
+func (c *Clientset) Cassandra() cassandrav1alpha1.CassandraV1alpha1Interface {
+	return &fakecassandrav1alpha1.FakeCassandraV1alpha1{Fake: &c.Fake}
 }

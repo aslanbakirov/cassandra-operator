@@ -17,7 +17,7 @@ limitations under the License.
 package scheme
 
 import (
-	aslangroupv1 "github.com/aslanbekirov/personcrd/pkg/apis/aslangroup.io/v1"
+	cassandrav1alpha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -48,5 +48,5 @@ func init() {
 // After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
 // correctly.
 func AddToScheme(scheme *runtime.Scheme) {
-	aslangroupv1.AddToScheme(scheme)
+	cassandrav1alpha1.AddToScheme(scheme)
 }

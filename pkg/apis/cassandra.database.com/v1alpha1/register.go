@@ -1,4 +1,4 @@
-package v1
+package v1alpha1
 
 import(
    
@@ -28,8 +28,8 @@ func init() {
 
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Person{},
-		&PersonList{},
+		&CassandraCluster{},
+		&CassandraClusterList{},
 	)
 	meta_v1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

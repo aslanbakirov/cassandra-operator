@@ -17,7 +17,7 @@ limitations under the License.
 package versioned
 
 import (
-	aslangroupv1 "github.com/aslanbekirov/personcrd/pkg/client/clientset/versioned/typed/aslangroup.io/v1"
+	cassandrav1alpha1 "github.com/aslanbekirov/cassandra-operator/pkg/client/clientset/versioned/typed/cassandra.database.com/v1alpha1"
 	glog "github.com/golang/glog"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
@@ -26,27 +26,27 @@ import (
 
 type Interface interface {
 	Discovery() discovery.DiscoveryInterface
-	AslangroupV1() aslangroupv1.AslangroupV1Interface
+	CassandraV1alpha1() cassandrav1alpha1.CassandraV1alpha1Interface
 	// Deprecated: please explicitly pick a version if possible.
-	Aslangroup() aslangroupv1.AslangroupV1Interface
+	Cassandra() cassandrav1alpha1.CassandraV1alpha1Interface
 }
 
 // Clientset contains the clients for groups. Each group has exactly one
 // version included in a Clientset.
 type Clientset struct {
 	*discovery.DiscoveryClient
-	aslangroupV1 *aslangroupv1.AslangroupV1Client
+	cassandraV1alpha1 *cassandrav1alpha1.CassandraV1alpha1Client
 }
 
-// AslangroupV1 retrieves the AslangroupV1Client
-func (c *Clientset) AslangroupV1() aslangroupv1.AslangroupV1Interface {
-	return c.aslangroupV1
+// CassandraV1alpha1 retrieves the CassandraV1alpha1Client
+func (c *Clientset) CassandraV1alpha1() cassandrav1alpha1.CassandraV1alpha1Interface {
+	return c.cassandraV1alpha1
 }
 
-// Deprecated: Aslangroup retrieves the default version of AslangroupClient.
+// Deprecated: Cassandra retrieves the default version of CassandraClient.
 // Please explicitly pick a version.
-func (c *Clientset) Aslangroup() aslangroupv1.AslangroupV1Interface {
-	return c.aslangroupV1
+func (c *Clientset) Cassandra() cassandrav1alpha1.CassandraV1alpha1Interface {
+	return c.cassandraV1alpha1
 }
 
 // Discovery retrieves the DiscoveryClient
@@ -65,7 +65,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 	}
 	var cs Clientset
 	var err error
-	cs.aslangroupV1, err = aslangroupv1.NewForConfig(&configShallowCopy)
+	cs.cassandraV1alpha1, err = cassandrav1alpha1.NewForConfig(&configShallowCopy)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +82,7 @@ func NewForConfig(c *rest.Config) (*Clientset, error) {
 // panics if there is an error in the config.
 func NewForConfigOrDie(c *rest.Config) *Clientset {
 	var cs Clientset
-	cs.aslangroupV1 = aslangroupv1.NewForConfigOrDie(c)
+	cs.cassandraV1alpha1 = cassandrav1alpha1.NewForConfigOrDie(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClientForConfigOrDie(c)
 	return &cs
@@ -91,7 +91,7 @@ func NewForConfigOrDie(c *rest.Config) *Clientset {
 // New creates a new Clientset for the given RESTClient.
 func New(c rest.Interface) *Clientset {
 	var cs Clientset
-	cs.aslangroupV1 = aslangroupv1.New(c)
+	cs.cassandraV1alpha1 = cassandrav1alpha1.New(c)
 
 	cs.DiscoveryClient = discovery.NewDiscoveryClient(c)
 	return &cs

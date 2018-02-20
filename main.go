@@ -8,9 +8,9 @@ import(
 
 	v1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	personcrdclientset "github.com/aslanbekirov/personcrd/pkg/client/clientset/versioned"
-	personcrd_v1 "github.com/aslanbekirov/personcrd/pkg/apis/aslangroup.io/v1"
-	external_versions "github.com/aslanbekirov/personcrd/pkg/client/informers/externalversions"
+	co_clientset "github.com/aslanbekirov/cassandra-operator/pkg/client/clientset/versioned"
+	co_v1aplha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
+	external_versions "github.com/aslanbekirov/cassandra-operator/pkg/client/informers/externalversions"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/rest"
@@ -38,30 +38,30 @@ func main(){
 	}
 
 	// create clientset and create our crd, this only need to run once
-	clientset, err := personcrdclientset.NewForConfig(config)
+	clientset, err := co_clientset.NewForConfig(config)
 	if err != nil {
 		panic(err.Error())
 	}
 	
-	personcrd := &v1beta1.CustomResourceDefinition{
-		ObjectMeta: meta_v1.ObjectMeta{Name: personcrd_v1.FullCRDName},
+	cassandra_cluster := &v1beta1.CustomResourceDefinition{
+		ObjectMeta: meta_v1.ObjectMeta{Name: co_v1aplha1.FullCRDName},
 		Spec: v1beta1.CustomResourceDefinitionSpec{
-			Group:   personcrd_v1.CRDGroup,
-			Version: personcrd_v1.CRDVersion,
+			Group:   co_v1aplha1.CRDGroup,
+			Version: co_v1aplha1.CRDVersion,
 			Scope:   v1beta1.NamespaceScoped,
 			Names:   v1beta1.CustomResourceDefinitionNames{
-				Plural: personcrd_v1.CRDPlural,
-				Kind:   reflect.TypeOf(personcrd_v1.Person{}).Name(),
+				Plural: co_v1aplha1.CRDPlural,
+				Kind:   reflect.TypeOf(co_v1aplha1.CassandraCluster{}).Name(),
 			},
 		},
 	}
 
 	  
 	apiextensionsClient, err := apiextensionsclientset.NewForConfig(config)
-    result, err := apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(personcrd)
-	//result, err := clientset.AslangroupV1().Persons("test").Create(person)
+    result, err := apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(cassandra_cluster)
+
 	if err!=nil{
-		fmt.Println("Erro occured creating person crd, %v", err)
+		fmt.Println("Erro occured creating cassandra cluster crd, %v", err)
 		panic(err)
 	}
 
@@ -82,7 +82,7 @@ func main(){
 	// }
 
 	factory:=external_versions.NewSharedInformerFactory(clientset, time.Minute*3)
-	informer, err:= factory.ForResource(personcrd_v1.SchemeGroupVersion.WithResource("people"))
+	informer, err:= factory.ForResource(co_v1aplha1.SchemeGroupVersion.WithResource("people"))
 	informer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {

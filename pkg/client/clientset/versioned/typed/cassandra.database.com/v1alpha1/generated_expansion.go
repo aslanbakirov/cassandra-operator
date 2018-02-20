@@ -14,5 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// This package has the automatically generated typed clients.
-package v1
+package v1alpha1
+
+type CassandraClusterExpansion interface{}
