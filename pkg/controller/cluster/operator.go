@@ -21,6 +21,7 @@ type Cluster struct {
 
 	namespace string
 	// k8s workqueue pattern
+	indexer  cache.Indexer
 	informer cache.SharedIndexInformer
 	queue    workqueue.RateLimitingInterface
 
@@ -50,11 +51,6 @@ func (c *Cluster) Start(ctx context.Context) error {
 	go c.run(ctx)
 	<-ctx.Done()
 	return ctx.Err()
-}
-
-//TODO: trigger implmentation should be here
-func (c *Cluster) runWorker() {
-	fmt.Println("running worker")
 }
 
 func (c *Cluster) createCRD() error {

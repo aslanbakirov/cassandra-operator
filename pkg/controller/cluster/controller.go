@@ -26,9 +26,10 @@ func (c *Cluster) run(ctx context.Context) {
 	}
 	
 	factory := external_versions.NewSharedInformerFactory(clientset, time.Minute*3)
-
+	
 	c.informer = factory.Cassandra().V1alpha1().CassandraClusters().Informer()
-
+    c.indexer = factory.Cassandra().V1alpha1().CassandraClusters().Informer().GetIndexer()
+	 
 	c.informer.AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
 			AddFunc: func(obj interface{}) {
