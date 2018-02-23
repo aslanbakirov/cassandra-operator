@@ -4,16 +4,32 @@ import(
 	"fmt"
 	"time"
 	
+	
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/kubernetes"
 )
+
+func  WaitForStatefulSetReady(clientset kubernetes.Interface, ns string, name string, size int32) error {
+	return Retry(5*time.Second, 20, func() (bool, error) {
+		
+		statefulSet,err := clientset.AppsV1().StatefulSets(ns).Get(name, meta_v1.GetOptions{})
+		if err != nil {
+			return false,err
+		}
+		if statefulSet.Status.ReadyReplicas < size {
+			return false,nil
+		}
+		return true, nil
+	})
+}
 
 func WaitCRDReady(clientset apiextensionsclient.Interface, crdName string) error {
 	err := Retry(5*time.Second, 20, func() (bool, error) {
-		crd, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crdName, metav1.GetOptions{})
+		crd, err := clientset.ApiextensionsV1beta1().CustomResourceDefinitions().Get(crdName, meta_v1.GetOptions{})
 		if err != nil {
 			return false, err
 		}
