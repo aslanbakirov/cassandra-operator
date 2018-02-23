@@ -117,7 +117,7 @@ func (c *Cluster) handleCluster(spec *co_v1aplha1.CassandraClusterSpec) (*co_v1a
 	defer cancel()
 	
     //TODO: create cassandra cluster using statefulsets here
-     createCluster(ctx, c.namespace)
+    createCluster(ctx, c.namespace)
 	return nil, nil
 }
 

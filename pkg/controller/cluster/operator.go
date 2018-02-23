@@ -13,6 +13,7 @@ import (
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
+	"k8s.io/client-go/kubernetes"
 )
 
 //Cluster type definition
@@ -25,6 +26,7 @@ type Cluster struct {
 	informer cache.SharedIndexInformer
 	queue    workqueue.RateLimitingInterface
 
+	kubeClientset kubernetes.Interface
 	kubeconf string
 
 	createCustomResource bool
