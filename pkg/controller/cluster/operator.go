@@ -11,9 +11,9 @@ import (
 	v1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
-	"k8s.io/client-go/kubernetes"
 )
 
 //Cluster type definition
@@ -27,17 +27,20 @@ type Cluster struct {
 	queue    workqueue.RateLimitingInterface
 
 	kubeClientset kubernetes.Interface
-	kubeconf string
+	kubeconf      string
 
 	createCustomResource bool
 }
 
 //New Create new Cluster Instance
 func New(createCRD bool, kubeconf string) *Cluster {
+	rest, _ := utils.NewKubeClient(kubeconf)
+	clientset, _ := kubernetes.NewForConfig(rest)
 	return &Cluster{
-		logger:    logrus.WithField("pkg", "controller"),
-		namespace: "test",
-		kubeconf:   kubeconf,
+		logger:               logrus.WithField("pkg", "controller"),
+		namespace:            "test",
+		kubeconf:             kubeconf,
+		kubeClientset:        clientset,
 		createCustomResource: createCRD,
 	}
 }
@@ -70,13 +73,13 @@ func (c *Cluster) createCRD() error {
 		},
 	}
 
-    r, err:=utils.NewKubeClient(c.kubeconf)
+	r, err := utils.NewKubeClient(c.kubeconf)
 
 	apiextensionsClient, err := apiextensionsclientset.NewForConfig(r)
 	_, err = apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(cassandraCluster)
 
 	if err != nil {
-		fmt.Println("Erro occured creating cassandra cluster crd, %v", err)
+		fmt.Println("Error occured creating cassandra cluster crd, %v", err)
 		panic(err)
 	}
 

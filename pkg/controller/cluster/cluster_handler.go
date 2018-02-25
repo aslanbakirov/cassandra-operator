@@ -4,7 +4,7 @@ import(
 	"time"
 	"context"
 	"fmt"
-
+	
 	co_v1aplha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
 )
 
@@ -16,9 +16,9 @@ const (
 	//
 	// 5ms, 10ms, 20ms, 40ms, 80ms, 160ms, 320ms, 640ms, 1.3s, 2.6s, 5.1s, 10.2s, 20.4s, 41s, 82s
 	maxRetries = 15
-	DefaultRequestTimeout = 5 * time.Second
+	DefaultRequestTimeout = 80 * time.Second
 	// DefaultBackupTimeout is the default maximal allowed time of the entire backup process.
-	DefaultBackupTimeout    = 1 * time.Minute
+	DefaultBackupTimeout    = 20 * time.Minute
 	
 )
 
@@ -44,6 +44,7 @@ func (c *Cluster) processNextItem() bool {
 }
 
 func (c *Cluster) processItem(key string) error {
+	fmt.Println("Aslan: processItem: key=%s", key)
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		return err
@@ -58,7 +59,7 @@ func (c *Cluster) processItem(key string) error {
 	// if cc.Status.Succeeded || len(cc.Status.Reason) != 0 {
 	// 	return nil
 	// }
-	_, err = c.handleCluster(&cc.Spec)
+	_, err = c.handleCluster(cc)
 	// Report backup status
 	//c.reportBackupStatus(cs, err, cc)
 	return err
@@ -91,7 +92,7 @@ func (c *Cluster) handleErr(err error, key interface{}) {
 
 	// This controller retries maxRetries times if something goes wrong. After that, it stops trying.
 	if c.queue.NumRequeues(key) < maxRetries {
-		c.logger.Errorf("error syncing etcd backup (%v): %v", key, err)
+		c.logger.Errorf("error syncing cassandra cluster (%v): %v", key, err)
 
 		// Re-enqueue the key rate limited. Based on the rate limiter on the
 		// queue and the re-enqueue history, the key will be processed later again.
@@ -101,10 +102,11 @@ func (c *Cluster) handleErr(err error, key interface{}) {
 
 	c.queue.Forget(key)
 	// Report that, even after several retries, we could not successfully process this key
-	c.logger.Infof("Dropping etcd backup (%v) out of the queue: %v", key, err)
+	c.logger.Infof("Dropping cassandra cluster (%v) out of the queue: %v", key, err)
 }
 
-func (c *Cluster) handleCluster(spec *co_v1aplha1.CassandraClusterSpec) (*co_v1aplha1.CassandraClusterStatus, error) {
+func (c *Cluster) handleCluster(spec *co_v1aplha1.CassandraCluster) (*co_v1aplha1.CassandraClusterStatus, error) {
+	fmt.Println("Handling cluster:", spec.Name)
 	err := validate(spec)
 	if err != nil {
 		return nil, err
@@ -116,19 +118,22 @@ func (c *Cluster) handleCluster(spec *co_v1aplha1.CassandraClusterSpec) (*co_v1a
 	ctx, cancel := context.WithTimeout(context.Background(), backupTimeout)
 	defer cancel()
 	
-    //TODO: create cassandra cluster using statefulsets here
-    createCluster(ctx, c.namespace)
+    c.createCluster(ctx, spec , c.namespace)
 	return nil, nil
 }
 
 // TODO: move this to initializer
-func validate(spec *co_v1aplha1.CassandraClusterSpec) error {
-	// if len(spec.EtcdEndpoints) == 0 {
-	// 	return errors.New("spec.etcdEndpoints should not be empty")
-	// }
+func validate(spec *co_v1aplha1.CassandraCluster) error {
 	return nil
 }
 
-func createCluster(ctx context.Context, namespace string){
-  fmt.Println("Creating cassandra clsuter")
+func (c *Cluster) createCluster(ctx context.Context, spec *co_v1aplha1.CassandraCluster, namespace string){
+	fmt.Println("building service")
+	service:= c.buildService("cassandra")
+	fmt.Println("creating service")
+	c.CreateService(service)
+	fmt.Println("building ss : %s", spec.Name)
+	ss := c.BuildStatefulSet(spec)
+	fmt.Println("creating ss: %s", ss.Name)
+	c.CreateOrUpdateStatefulSet(ss)
 }
