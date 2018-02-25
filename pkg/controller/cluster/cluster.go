@@ -1,11 +1,10 @@
 package controller
 
 import (
-	//"fmt"
+	"fmt"
 	
-	//meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/api/apps/v1"
+	"k8s.io/api/apps/v1beta1"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	co_v1aplha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
@@ -33,24 +32,31 @@ func (c *Cluster) DeleteStatefulSet(ssName string) error{
 	return err
 }
 
-func (c *Cluster) CreateOrUpdateStatefulSet(ss *v1.StatefulSet) error{
+func (c *Cluster) CreateOrUpdateStatefulSet(ss *v1beta1.StatefulSet) error{
 
-	client := c.kubeClientset.AppsV1().StatefulSets(c.namespace)
-    
+	client := c.kubeClientset.AppsV1beta1().StatefulSets(c.namespace)
+	
 	statefulSet, err := client.Get(ss.Name, meta_v1.GetOptions{})
 	if err != nil && !errors.IsNotFound(err) {
 		return err
 	}
 
 	if errors.IsNotFound(err) {
-		_, err = client.Create(ss)
+		fmt.Println("ss yoxdu, ve creating: %s", ss.Name)
+		fmt.Println("replica:", *ss.Spec.Replicas)
+		fmt.Println("volumeSize",ss.Spec.VolumeClaimTemplates[0].Spec)
+
+		rs, err := client.Create(ss)
 		if err != nil {
 			return err
 		}
+		fmt.Printf("resulted ss: %v", rs)
+		fmt.Println("ss create eledim gozduyurem")
 		err = utils.WaitForStatefulSetReady(c.kubeClientset, c.namespace, ss.Name, *ss.Spec.Replicas)
 		if err != nil {
 			return err
 		}
+		fmt.Println("hazirdi, gele kullan")
 	} else {
 		ss.ResourceVersion = statefulSet.ResourceVersion
 		_, err := client.Update(ss)
@@ -64,39 +70,39 @@ func (c *Cluster) CreateOrUpdateStatefulSet(ss *v1.StatefulSet) error{
 
 
 
-func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1.StatefulSet{
+func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1beta1.StatefulSet{
 
-	limitCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Cpu().String())
-	limitMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Memory().String())
-	requestCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Cpu().String())
-	requestMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Memory().String())
+	// limitCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Cpu().String())
+	// limitMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Memory().String())
+	// requestCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Cpu().String())
+	// requestMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Memory().String())
 	requestDataStorage,_ := resource.ParseQuantity(cc.Spec.PodSpec.PV.VolumeSize)
 
-	var antiAffinity *core_v1.Affinity
-	if (cc.Spec.PodSpec.AntiAffinity == true){
-		antiAffinity = &core_v1.Affinity{
-			PodAntiAffinity: &core_v1.PodAntiAffinity{
-				RequiredDuringSchedulingIgnoredDuringExecution: []core_v1.PodAffinityTerm{
-					{
-						LabelSelector: &meta_v1.LabelSelector{
-							MatchExpressions: []meta_v1.LabelSelectorRequirement{
-								{
-									Key:      "cassandraCluster",
-									Operator: meta_v1.LabelSelectorOpIn,
-									Values:   []string{cc.ObjectMeta.Name},
-								},
-							},
-						},
-						TopologyKey: "kubernetes.io/hostname",
-					},
-				},
-			},
-		}
-	}else{
-		antiAffinity = nil
-	}
+	// var antiAffinity *core_v1.Affinity
+	// if (cc.Spec.PodSpec.AntiAffinity == true){
+	// 	antiAffinity = &core_v1.Affinity{
+	// 		PodAntiAffinity: &core_v1.PodAntiAffinity{
+	// 			RequiredDuringSchedulingIgnoredDuringExecution: []core_v1.PodAffinityTerm{
+	// 				{
+	// 					LabelSelector: &meta_v1.LabelSelector{
+	// 						MatchExpressions: []meta_v1.LabelSelectorRequirement{
+	// 							{
+	// 								Key:      "cassandraCluster",
+	// 								Operator: meta_v1.LabelSelectorOpIn,
+	// 								Values:   []string{cc.ObjectMeta.Name},
+	// 							},
+	// 						},
+	// 					},
+	// 					TopologyKey: "kubernetes.io/hostname",
+	// 				},
+	// 			},
+	// 		},
+	// 	}
+	// }else{
+	// 	antiAffinity = nil
+	// }
 
-	statefulSet := &v1.StatefulSet{
+	statefulSet := &v1beta1.StatefulSet{
 		ObjectMeta: meta_v1.ObjectMeta{
 			Name: cc.Name,
 			Labels: map[string]string{
@@ -108,25 +114,24 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1.Statefu
 
 			},
 		},
-		Spec: v1.StatefulSetSpec{
-			ServiceName: cc.Name+"-node", 
+		Spec: v1beta1.StatefulSetSpec{
+			ServiceName: "cassandra", 
 			Selector: &meta_v1.LabelSelector{
 				MatchLabels: map[string]string {
 					"cassandraCluster": cc.Name,
 				},
 			},
-			UpdateStrategy: v1.StatefulSetUpdateStrategy{
-				Type: v1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: &v1.RollingUpdateStatefulSetStrategy{
+			UpdateStrategy: v1beta1.StatefulSetUpdateStrategy{
+				Type: v1beta1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: &v1beta1.RollingUpdateStatefulSetStrategy{
 					Partition: func(i int) *int32 { j:=int32(i);return &j}(0),
 				},
 			},
 			Replicas: &cc.Spec.Size,
-			//ServiceName: mc.ObjectMeta.Name,
 			Template: core_v1.PodTemplateSpec{
 				ObjectMeta: meta_v1.ObjectMeta{
 					Labels: map[string]string{
-						"cassandraCluster": cc.Name,
+						"app": "cassandra",
 						"role": "cassandraCluster",
 					},
 					Annotations: map[string]string{
@@ -136,7 +141,7 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1.Statefu
 				},
 				Spec: core_v1.PodSpec{
 
-					Affinity: antiAffinity,
+					//Affinity: false,
 					TerminationGracePeriodSeconds: func(i int64) *int64 { return &i}(10),
 					/*Volumes: []core_v1.Volume{
 						{
@@ -155,52 +160,6 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1.Statefu
 							Image:           cc.Spec.PodSpec.Image,
 							ImagePullPolicy: "Always",
 							Env: cc.Spec.PodSpec.Env,
-							// Env: []core_v1.EnvVar{
-							// 	{
-							// 		Name: "NAMESPACE",
-							// 		ValueFrom: &core_v1.EnvVarSource{
-							// 			FieldRef: &core_v1.ObjectFieldSelector{
-							// 				FieldPath: "metadata.namespace",
-							// 			},
-							// 		},
-							// 	},
-							// 	{
-							// 		Name: "MAX_HEAP_SIZE",
-							// 		Value: cc.Spec.PodSpec.Env[0].Value,
-							// 	},
-							// 	{
-							// 		Name: "HEAP_NEW_SIZE",
-							// 		Value: cc.Spec.PodSpec.Env[1].Value,
-							// 	},
-							// 	{
-							// 		Name: "CASSANDRA_SEEDS",
-							// 		Value: cc.Name+"-0."+cc.Name+"-node."+c.namespace+".svc.cluster.local",
-							// 	},
-							// 	{
-							// 		Name: "CASSANDRA_CLUSTER_NAME",
-							// 		Value: cc.Name,
-							// 	},
-							// 	{
-							// 		Name: "CASSANDRA_DC",
-							// 		Value: cc.Spec.PodSpec.Env[1].Value,
-							// 	},
-							// 	{
-							// 		Name: "CASSANDRA_RACK",
-							// 		Value: cc.Spec.PodSpec.Env[1].Value,
-							// 	},
-							// 	{
-							// 		Name: "CASSANDRA_AUTO_BOOTSTRAP",
-							// 		Value: cc.Spec.PodSpec.Env[1].Value,
-							// 	},
-							// 	{
-							// 		Name: "POD_IP",
-							// 		ValueFrom: &core_v1.EnvVarSource{
-							// 			FieldRef: &core_v1.ObjectFieldSelector{
-							// 				FieldPath: "status.podIP",
-							// 			},
-							// 		},
-							// 	},
-							//},
 							Ports: []core_v1.ContainerPort{
 								{
 									Name:          "cql",
@@ -256,16 +215,16 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1.Statefu
 									MountPath: "/cassandra_data",
 								},
 							},
-							Resources: core_v1.ResourceRequirements{
-								Limits: core_v1.ResourceList{
-									"cpu":    limitCPU,
-									"memory": limitMemory,
-								},
-								Requests: core_v1.ResourceList{
-									"cpu":    requestCPU,
-									"memory": requestMemory,
-								},
-							},
+							// Resources: core_v1.ResourceRequirements{
+							// 	Limits: core_v1.ResourceList{
+							// 		"cpu":    limitCPU,
+							// 		"memory": limitMemory,
+							// 	},
+							// 	Requests: core_v1.ResourceList{
+							// 		"cpu":    requestCPU,
+							// 		"memory": requestMemory,
+							// 	},
+							// },
 						},
 					},
 				},
@@ -275,7 +234,7 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1.Statefu
 					ObjectMeta: meta_v1.ObjectMeta{
 						Name: "data",
 						Annotations: map[string]string{
-							"volume.beta.kubernetes.io/storage-class": cc.Spec.PodSpec.PV.StorageClass,
+							"volume.beta.kubernetes.io/storage-class": "vsphere",
 						},
 						Labels: map[string]string{
 							"name":      cc.Name,
