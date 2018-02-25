@@ -1,0 +1,23 @@
+apiVersion: cassandra.database.com/v1alpha1
+kind: CassandraCluster
+metadata:
+  name: cassandra-cluster
+spec:
+  size: 4
+  version: "3.11.0"
+  pod:
+    image: aslanbekirov/cassandra-3.11.0:v1
+    pv:
+      volumeSize: 2Gi
+    env:
+     - name: CASSANDRA_SERVICE_NUM_SEEDS
+       value: "1"
+     - name: MAX_HEAP_SIZE
+       value: 4G
+     - name: HEAP_NEWSIZE
+       value: 1G
+    # - name: CASSANDRA_SEED_PROVIDER
+    #   value: "io.k8s.cassandra.KubernetesSeedProvider"
+     - name: CASSANDRA_AUTO_BOOTSTRAP
+       value: "false"
+
