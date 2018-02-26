@@ -14,9 +14,9 @@ import(
 )
 
 func  WaitForStatefulSetReady(clientset kubernetes.Interface, ns string, name string, size int32) error {
-	return Retry(100*time.Second, 2, func() (bool, error) {
+	return Retry(10*time.Second, 10, func() (bool, error) {
 		
-		statefulSet,err := clientset.AppsV1().StatefulSets(ns).Get(name, meta_v1.GetOptions{})
+		statefulSet,err := clientset.AppsV1beta1().StatefulSets(ns).Get(name, meta_v1.GetOptions{})
 		if err != nil {
 			return false,err
 		}

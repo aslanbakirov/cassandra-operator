@@ -9,13 +9,9 @@ import(
 )
 
 const (
-	// Copy from deployment_controller.go:
-	// maxRetries is the number of times a etcd backup will be retried before it is dropped out of the queue.
-	// With the current rate-limiter in use (5ms*2^(maxRetries-1)) the following numbers represent the times
-	// an etcd backup is going to be requeued:
-	//
+	
 	// 5ms, 10ms, 20ms, 40ms, 80ms, 160ms, 320ms, 640ms, 1.3s, 2.6s, 5.1s, 10.2s, 20.4s, 41s, 82s
-	maxRetries = 15
+	maxRetries = 2
 	DefaultRequestTimeout = 80 * time.Second
 	// DefaultBackupTimeout is the default maximal allowed time of the entire backup process.
 	DefaultBackupTimeout    = 20 * time.Minute
@@ -44,7 +40,7 @@ func (c *Cluster) processNextItem() bool {
 }
 
 func (c *Cluster) processItem(key string) error {
-	fmt.Println("Aslan: processItem: key=%s", key)
+	fmt.Printf("Aslan: processItem: key=%s at %v", key, time.Now().String())
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		return err
@@ -128,12 +124,8 @@ func validate(spec *co_v1aplha1.CassandraCluster) error {
 }
 
 func (c *Cluster) createCluster(ctx context.Context, spec *co_v1aplha1.CassandraCluster, namespace string){
-	fmt.Println("building service")
 	service:= c.buildService("cassandra")
-	fmt.Println("creating service")
 	c.CreateService(service)
-	fmt.Println("building ss : %s", spec.Name)
 	ss := c.BuildStatefulSet(spec)
-	fmt.Println("creating ss: %s", ss.Name)
 	c.CreateOrUpdateStatefulSet(ss)
 }

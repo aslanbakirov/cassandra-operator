@@ -20,7 +20,7 @@ import (
 // }
 
 func (c *Cluster) DeleteStatefulSet(ssName string) error{
-	err := c.kubeClientset.AppsV1().StatefulSets(c.namespace).Delete(ssName, &meta_v1.DeleteOptions{
+	err := c.kubeClientset.AppsV1beta1().StatefulSets(c.namespace).Delete(ssName, &meta_v1.DeleteOptions{
 		PropagationPolicy: func() *meta_v1.DeletionPropagation {
 			foreground := meta_v1.DeletePropagationForeground
 			return &foreground
@@ -44,7 +44,7 @@ func (c *Cluster) CreateOrUpdateStatefulSet(ss *v1beta1.StatefulSet) error{
 	if errors.IsNotFound(err) {
 		fmt.Println("ss yoxdu, ve creating: %s", ss.Name)
 		fmt.Println("replica:", *ss.Spec.Replicas)
-		fmt.Println("volumeSize",ss.Spec.VolumeClaimTemplates[0].Spec)
+		fmt.Println("volumeSize", ss.Spec.VolumeClaimTemplates[0].Spec)
 
 		rs, err := client.Create(ss)
 		if err != nil {
@@ -72,10 +72,10 @@ func (c *Cluster) CreateOrUpdateStatefulSet(ss *v1beta1.StatefulSet) error{
 
 func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1beta1.StatefulSet{
 
-	// limitCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Cpu().String())
-	// limitMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Memory().String())
-	// requestCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Cpu().String())
-	// requestMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Memory().String())
+	limitCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Cpu().String())
+	limitMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Limits.Memory().String())
+	requestCPU, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Cpu().String())
+	requestMemory, _ := resource.ParseQuantity(cc.Spec.PodSpec.Resources.Requests.Memory().String())
 	requestDataStorage,_ := resource.ParseQuantity(cc.Spec.PodSpec.PV.VolumeSize)
 
 	// var antiAffinity *core_v1.Affinity
@@ -116,11 +116,11 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1beta1.St
 		},
 		Spec: v1beta1.StatefulSetSpec{
 			ServiceName: "cassandra", 
-			Selector: &meta_v1.LabelSelector{
-				MatchLabels: map[string]string {
-					"cassandraCluster": cc.Name,
-				},
-			},
+			// Selector: &meta_v1.LabelSelector{
+			// 	MatchLabels: map[string]string {
+			// 		"cassandraCluster": cc.Name,
+			// 	},
+			// },
 			UpdateStrategy: v1beta1.StatefulSetUpdateStrategy{
 				Type: v1beta1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: &v1beta1.RollingUpdateStatefulSetStrategy{
@@ -140,8 +140,7 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1beta1.St
 					},
 				},
 				Spec: core_v1.PodSpec{
-
-					//Affinity: false,
+					//Affinity: antiAffinity,
 					TerminationGracePeriodSeconds: func(i int64) *int64 { return &i}(10),
 					/*Volumes: []core_v1.Volume{
 						{
@@ -196,35 +195,35 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1beta1.St
 									},
 								},
 							},
-							ReadinessProbe: &core_v1.Probe{
-								Handler: core_v1.Handler{
-									Exec: &core_v1.ExecAction{
-										Command: []string {
-											"/bin/bash",
-											"-c",
-											"/ready-probe.sh",
-										},
-									},
-								},
-								InitialDelaySeconds: int32(15),
-								TimeoutSeconds: int32(5),
-							},
+							// ReadinessProbe: &core_v1.Probe{
+							// 	Handler: core_v1.Handler{
+							// 		Exec: &core_v1.ExecAction{
+							// 			Command: []string {
+							// 				"/bin/bash",
+							// 				"-c",
+							// 				"/ready-probe.sh",
+							// 			},
+							// 		},
+							// 	},
+							// 	InitialDelaySeconds: int32(15),
+							// 	TimeoutSeconds: int32(5),
+							// },
 							VolumeMounts: []core_v1.VolumeMount{
 								{
 									Name:      "data",
 									MountPath: "/cassandra_data",
 								},
 							},
-							// Resources: core_v1.ResourceRequirements{
-							// 	Limits: core_v1.ResourceList{
-							// 		"cpu":    limitCPU,
-							// 		"memory": limitMemory,
-							// 	},
-							// 	Requests: core_v1.ResourceList{
-							// 		"cpu":    requestCPU,
-							// 		"memory": requestMemory,
-							// 	},
-							// },
+							Resources: core_v1.ResourceRequirements{
+								Limits: core_v1.ResourceList{
+									"cpu":    limitCPU,
+									"memory": limitMemory,
+								},
+								Requests: core_v1.ResourceList{
+									"cpu":    requestCPU,
+									"memory": requestMemory,
+								},
+							},
 						},
 					},
 				},
