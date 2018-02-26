@@ -195,19 +195,19 @@ func (c *Cluster) BuildStatefulSet(cc *co_v1aplha1.CassandraCluster) *v1beta1.St
 									},
 								},
 							},
-							// ReadinessProbe: &core_v1.Probe{
-							// 	Handler: core_v1.Handler{
-							// 		Exec: &core_v1.ExecAction{
-							// 			Command: []string {
-							// 				"/bin/bash",
-							// 				"-c",
-							// 				"/ready-probe.sh",
-							// 			},
-							// 		},
-							// 	},
-							// 	InitialDelaySeconds: int32(15),
-							// 	TimeoutSeconds: int32(5),
-							// },
+							ReadinessProbe: &core_v1.Probe{
+								Handler: core_v1.Handler{
+									Exec: &core_v1.ExecAction{
+										Command: []string {
+											"/bin/bash",
+											"-c",
+											"/ready-probe.sh",
+										},
+									},
+								},
+								InitialDelaySeconds: int32(15),
+								TimeoutSeconds: int32(5),
+							},
 							VolumeMounts: []core_v1.VolumeMount{
 								{
 									Name:      "data",
