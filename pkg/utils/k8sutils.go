@@ -3,6 +3,8 @@ package utils
 import(
 	"fmt"
 	"time"
+	"os"
+	"net"
 	
 	
 	apiextensionsv1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
@@ -58,4 +60,32 @@ func NewKubeClient(kubeconfig string) (*rest.Config, error){
 		return clientcmd.BuildConfigFromFlags("", kubeconfig)
 	}
 	return rest.InClusterConfig()
+}
+
+func MustNewKubeClient() kubernetes.Interface {
+	cfg, err := InClusterConfig()
+	if err != nil {
+		panic(err)
+	}
+	return kubernetes.NewForConfigOrDie(cfg)
+}
+
+func InClusterConfig() (*rest.Config, error) {
+	if len(os.Getenv("KUBERNETES_SERVICE_HOST")) == 0 {
+		addrs, err := net.LookupHost("kubernetes.default.svc")
+		if err != nil {
+			panic(err)
+		}
+		os.Setenv("KUBERNETES_SERVICE_HOST", addrs[0])
+	}
+	if len(os.Getenv("KUBERNETES_SERVICE_PORT")) == 0 {
+		os.Setenv("KUBERNETES_SERVICE_PORT", "443")
+	}
+	cfg, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	// Set a reasonable default request timeout
+	//cfg.Timeout = defaultKubeAPIRequestTimeout
+	return cfg, nil
 }

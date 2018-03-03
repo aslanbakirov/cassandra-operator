@@ -3,17 +3,14 @@ package controller
 import(
 	"time"
 	"context"
-	"fmt"
 	
 	co_v1aplha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
 )
 
 const (
 	
-	// 5ms, 10ms, 20ms, 40ms, 80ms, 160ms, 320ms, 640ms, 1.3s, 2.6s, 5.1s, 10.2s, 20.4s, 41s, 82s
 	maxRetries = 2
 	DefaultRequestTimeout = 80 * time.Second
-	// DefaultBackupTimeout is the default maximal allowed time of the entire backup process.
 	DefaultBackupTimeout    = 20 * time.Minute
 	
 )
@@ -40,7 +37,7 @@ func (c *Cluster) processNextItem() bool {
 }
 
 func (c *Cluster) processItem(key string) error {
-	fmt.Printf("Aslan: processItem: key=%s at %v", key, time.Now().String())
+	c.logger.Infof("Processing key=%s", key)
 	obj, exists, err := c.indexer.GetByKey(key)
 	if err != nil {
 		return err
@@ -102,7 +99,6 @@ func (c *Cluster) handleErr(err error, key interface{}) {
 }
 
 func (c *Cluster) handleCluster(spec *co_v1aplha1.CassandraCluster) (*co_v1aplha1.CassandraClusterStatus, error) {
-	fmt.Println("Handling cluster:", spec.Name)
 	err := validate(spec)
 	if err != nil {
 		return nil, err
@@ -114,7 +110,7 @@ func (c *Cluster) handleCluster(spec *co_v1aplha1.CassandraCluster) (*co_v1aplha
 	ctx, cancel := context.WithTimeout(context.Background(), backupTimeout)
 	defer cancel()
 	
-    c.createCluster(ctx, spec , c.namespace)
+	c.createCluster(ctx, spec , c.namespace)
 	return nil, nil
 }
 
@@ -127,5 +123,10 @@ func (c *Cluster) createCluster(ctx context.Context, spec *co_v1aplha1.Cassandra
 	service:= c.buildService("cassandra")
 	c.CreateService(service)
 	ss := c.BuildStatefulSet(spec)
-	c.CreateOrUpdateStatefulSet(ss)
+
+	c.logger.Infof("BUilt ss is : %v", ss)
+	err := c.CreateOrUpdateStatefulSet(ss)
+	if err!=nil{
+		c.logger.Fatalf("creating statefulset failed : %v", err)
+	}
 }

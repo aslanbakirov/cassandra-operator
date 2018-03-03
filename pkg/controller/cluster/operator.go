@@ -2,7 +2,6 @@ package controller
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	co_v1aplha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
@@ -25,21 +24,21 @@ type Cluster struct {
 	indexer  cache.Indexer
 	informer cache.SharedIndexInformer
 	queue    workqueue.RateLimitingInterface
-
-	kubeClientset kubernetes.Interface
-	kubeconf      string
-
+   kubeClientset kubernetes.Interface
+	
 	createCustomResource bool
 }
 
 //New Create new Cluster Instance
-func New(createCRD bool, kubeconf string) *Cluster {
-	rest, _ := utils.NewKubeClient(kubeconf)
-	clientset, _ := kubernetes.NewForConfig(rest)
+func New(createCRD bool, namespace string) *Cluster {
+
+	//rest, _ := utils.NewKubeClient(kubeconf)
+	//clientset, _ := kubernetes.NewForConfig(rest)
+   
+	clientset := utils.MustNewKubeClient(); 
 	return &Cluster{
 		logger:               logrus.WithField("pkg", "controller"),
-		namespace:            "test",
-		kubeconf:             kubeconf,
+		namespace:            namespace,
 		kubeClientset:        clientset,
 		createCustomResource: createCRD,
 	}
@@ -73,19 +72,19 @@ func (c *Cluster) createCRD() error {
 		},
 	}
 
-	r, err := utils.NewKubeClient(c.kubeconf)
-
+	r, err := utils.InClusterConfig()
+    
 	apiextensionsClient, err := apiextensionsclientset.NewForConfig(r)
 	_, err = apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(cassandraCluster)
 
 	if err != nil {
-		fmt.Println("Error occured creating cassandra cluster crd, %v", err)
+		c.logger.Infof("Error occured creating cassandra cluster crd, %v", err)
 		panic(err)
 	}
 
 	err = utils.WaitCRDReady(apiextensionsClient, co_v1aplha1.FullCRDName)
 	if err != nil {
-		fmt.Println("Crd is created and ready to use, %s", co_v1aplha1.FullCRDName)
+		c.logger.Infof("Crd is created and ready to use, %s", co_v1aplha1.FullCRDName)
 		panic(err)
 	}
 	return err

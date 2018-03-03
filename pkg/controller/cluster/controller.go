@@ -18,7 +18,7 @@ func (c *Cluster) run(ctx context.Context) {
 
 	c.queue = workqueue.NewNamedRateLimitingQueue(workqueue.DefaultControllerRateLimiter(), "cassandra-operator")
 	
-	r, err:=utils.NewKubeClient(c.kubeconf)
+	r, err:=utils.InClusterConfig()
 
 	clientset, err := clientset.NewForConfig(r)
 	if err != nil {
