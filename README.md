@@ -1,8 +1,8 @@
 # Cassandra Operator 
 
-`
-Disclaimer: This is my side project to learn/experiment and apply all features of Custom Resource Definitions, stateful applications and related technologies in Kubernetes. It is under active development, can be beneficial to be used as template for cassandra operator design 
-`
+
+**Disclaimer:** This is my side project to learn/experiment and apply all features of Custom Resource Definitions, stateful applications and related technologies in Kubernetes. It is under active development, can be beneficial to be used as template for cassandra operator design
+
 ## Project Overview
 
 The Cassandra operator manages Cassandra clusters deployed to Kubernetes and automates tasks related to operating an Cassandra cluster.
