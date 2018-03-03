@@ -17,7 +17,6 @@ func main() {
 	if len(namespace) == 0 {
 		logrus.Fatalf("must set env MY_POD_NAMESPACE", )
 	}
-	
 	logrus.Infof("Starting Cassandra operator in namespace %s", namespace)
 	c := crd_controller.New(true, namespace)
 	c.Start(context.Background())

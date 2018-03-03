@@ -3,7 +3,7 @@ kind: CassandraCluster
 metadata:
   name: cassandra
 spec:
-  size: 4
+  size: 3
   version: "3.11.0"
   pod:
     image: aslanbekirov/cassandra-3.11.0:v1
@@ -17,7 +17,7 @@ spec:
      - name: HEAP_NEWSIZE
        value: 1G
      - name: CASSANDRA_SEEDS
-       value: "cassandra-0.cassandra.test.svc.sss.drhmlab02.ef86.net"
+       value: "cassandra-0.cassandra.test"
     # - name: CASSANDRA_SEED_PROVIDER
     #   value: "io.k8s.cassandra.KubernetesSeedProvider"
      - name: CASSANDRA_CLUSTER_NAME
