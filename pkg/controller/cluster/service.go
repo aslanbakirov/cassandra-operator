@@ -1,7 +1,7 @@
 package controller
 
 import(
-	"fmt"
+	//"fmt"
 	
 	"k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -21,13 +21,11 @@ func (c *Cluster) CreateService(s *v1.Service) error{
 	}
 
 	if errors.IsNotFound(err) {
-		fmt.Println("service yoxdu, ve creating: %s", s.Name)
 		_, err = client.Create(ser)
 		if err != nil {
 			return err
 		}
-		fmt.Println("service create eledim gozduyurem")
-
+		
 	} else {
 		service.ResourceVersion = ser.ResourceVersion
 		_, err := client.Update(ser)

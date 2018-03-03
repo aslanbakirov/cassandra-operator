@@ -23,11 +23,13 @@ rules:
   - endpoints
   - persistentvolumeclaims
   - events
+  - statefulsets
   verbs:
   - "*"
 - apiGroups:
   - apps
   resources:
   - deployments
+  - statefulsets
   verbs:
   - "*"
