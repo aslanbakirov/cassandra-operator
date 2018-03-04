@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"reflect"
+	"crypto/tls"
 
 	co_v1aplha1 "github.com/aslanbekirov/cassandra-operator/pkg/apis/cassandra.database.com/v1alpha1"
 	utils "github.com/aslanbekirov/cassandra-operator/pkg/utils"
@@ -25,7 +26,9 @@ type Cluster struct {
 	indexer  cache.Indexer
 	informer cache.SharedIndexInformer
 	queue    workqueue.RateLimitingInterface
-   kubeClientset kubernetes.Interface
+	kubeClientset kubernetes.Interface
+	
+	tlsConfig *tls.Config
 	
 	createCustomResource bool
 }

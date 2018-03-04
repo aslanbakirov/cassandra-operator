@@ -27,6 +27,7 @@ type CassandraClusterSpec struct{
     Size int32 `json:"size"`
     Version string `json:"version"`
     PodSpec PodSpec `json:"pod, omitempty"`
+    TLS *TLSPolicy `json:"TLS,omitempty"`
 }
 
 type CassandraClusterStatus struct {
