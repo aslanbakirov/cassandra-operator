@@ -10,6 +10,7 @@ import (
 	v1beta1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1beta1"
 	apiextensionsclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	meta_v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/util/workqueue"
@@ -31,10 +32,7 @@ type Cluster struct {
 
 //New Create new Cluster Instance
 func New(createCRD bool, namespace string) *Cluster {
-
-	//rest, _ := utils.NewKubeClient(kubeconf)
-	//clientset, _ := kubernetes.NewForConfig(rest)
-   
+	
 	clientset := utils.MustNewKubeClient(); 
 	return &Cluster{
 		logger:               logrus.WithField("pkg", "controller"),
@@ -76,6 +74,10 @@ func (c *Cluster) createCRD() error {
     
 	apiextensionsClient, err := apiextensionsclientset.NewForConfig(r)
 	_, err = apiextensionsClient.ApiextensionsV1beta1().CustomResourceDefinitions().Create(cassandraCluster)
+   
+	if err != nil && apierrors.IsAlreadyExists(err) {
+		return nil
+	}
 
 	if err != nil {
 		c.logger.Infof("Error occured creating cassandra cluster crd, %v", err)
