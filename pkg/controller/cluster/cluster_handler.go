@@ -110,8 +110,8 @@ func (c *Cluster) handleCluster(spec *co_v1aplha1.CassandraCluster) (*co_v1aplha
 	ctx, cancel := context.WithTimeout(context.Background(), backupTimeout)
 	defer cancel()
 	
-	c.createCluster(ctx, spec , c.namespace)
-	return nil, nil
+	err = c.createCluster(ctx, spec , c.namespace)
+	return nil, err
 }
 
 // TODO: move this to initializer
@@ -119,14 +119,13 @@ func validate(spec *co_v1aplha1.CassandraCluster) error {
 	return nil
 }
 
-func (c *Cluster) createCluster(ctx context.Context, spec *co_v1aplha1.CassandraCluster, namespace string){
+func (c *Cluster) createCluster(ctx context.Context, spec *co_v1aplha1.CassandraCluster, namespace string) error{
 	service:= c.buildService("cassandra")
 	c.CreateService(service)
 	ss := c.BuildStatefulSet(spec)
-
-	c.logger.Infof("BUilt ss is : %v", ss)
 	err := c.CreateOrUpdateStatefulSet(ss)
 	if err!=nil{
 		c.logger.Fatalf("creating statefulset failed : %v", err)
 	}
+	return err
 }
